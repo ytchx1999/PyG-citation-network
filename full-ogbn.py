@@ -211,9 +211,9 @@ class JKNet(nn.Module):
 
 # 实例化模型
 model = GCNNet(dataset=dataset, hidden=256, num_layers=3)
-# model = GATNet(dataset=dataset, hidden=128, num_layers=3)
+# model = GATNet(dataset=dataset, hidden=128, num_layers=2)
 # model = SAGENet(dataset=dataset, hidden=256, num_layers=3)
-# model = JKNet(dataset=dataset, mode='max', hidden=256, num_layers=6)
+# model = JKNet(dataset=dataset, mode='max', hidden=128, num_layers=5)
 print(model)
 
 # 转换为cpu或cuda格式
@@ -226,7 +226,7 @@ train_idx = train_idx.to(device)
 
 # 定义损失函数和优化器
 criterion = nn.NLLLoss().to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 
 
 # 定义训练函数
@@ -269,7 +269,7 @@ def test():
 
 # 程序入口
 if __name__ == '__main__':
-    for epoch in range(100):
+    for epoch in range(200):
         loss = train()
         print('Epoch {:03d} train_loss: {:.4f}'.format(epoch, loss))
 

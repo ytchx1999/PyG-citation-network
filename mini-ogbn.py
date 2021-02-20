@@ -118,7 +118,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 model.to(device)
 data = data.to(device)
-data.adj_t = data.adj_t.to_symmetric()  # 对称归一化
+# data.adj_t = data.adj_t.to_symmetric()  # 对称归一化
 train_idx = train_idx.to(device)
 
 x = data.x.to(device)
@@ -126,7 +126,7 @@ y = data.y.squeeze().to(device)
 
 # 定义损失函数和优化器
 criterion = nn.NLLLoss().to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 
 
 # 定义训练函数(minibatch)
@@ -182,7 +182,7 @@ def test():
 
 # 程序入口
 if __name__ == '__main__':
-    for epoch in range(100):
+    for epoch in range(20):
         loss, acc = train()
         print('Epoch {:03d} train_loss: {:.4f} train_acc: {:.4f}'.format(epoch, loss, acc))
 
