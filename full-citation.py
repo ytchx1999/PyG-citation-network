@@ -259,7 +259,7 @@ model = GCNNet(dataset=dataset, hidden=16, num_layers=2)
 # model = GATNet(dataset=dataset, hidden=8, num_layers=2)
 # model = SAGENet(dataset=dataset, hidden=16, num_layers=2)
 # model = JKNet(dataset=dataset, mode='max', hidden=16, num_layers=6)
-# model = GCN_res(dataset=dataset, hidden=16, num_layers=8)
+# model = GCN_res(dataset=dataset, hidden=16, num_layers=64)
 print(model)
 
 # 转换为cpu或cuda格式
