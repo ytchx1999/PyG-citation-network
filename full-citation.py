@@ -10,7 +10,7 @@ from torch_geometric.nn import GCNConv, GATConv, SAGEConv, JumpingKnowledge
 """
 批处理：full-batch
 图数据表示方法：GS
-模型：GCN、GAT、SAGE、JKNet
+模型：GCN、GAT、SAGE、JKNet、GCN_res
 数据集：Cora、Citeseer、Pubmed
 """
 
@@ -197,11 +197,69 @@ class JKNet(nn.Module):
         return h
 
 
+# GCN_res
+class GCN_res(nn.Module):
+    def __init__(self, dataset, hidden=256, num_layers=6):
+        super(GCN_res, self).__init__()
+
+        self.num_layers = num_layers
+        self.convs = nn.ModuleList()
+        self.bns = nn.ModuleList()
+
+        self.input_fc = nn.Linear(dataset.num_node_features, hidden)
+
+        for i in range(self.num_layers):
+            self.convs.append(GCNConv(hidden, hidden))
+            self.bns.append(nn.BatchNorm1d(hidden))
+
+        self.out_fc = nn.Linear(hidden, dataset.num_classes)
+        self.weights = torch.nn.Parameter(torch.randn((len(self.convs))))
+
+    def reset_parameters(self):
+        for conv in self.convs:
+            conv.reset_parameters()
+        for bn in self.bns:
+            bn.reset_parameters()
+        self.input_fc.reset_parameters()
+        self.out_fc.reset_parameters()
+        torch.nn.init.normal_(self.weights)
+
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+
+        x = self.input_fc(x)
+        x_input = x  # .copy()
+
+        layer_out = []  # 保存每一层的结果
+        for i in range(self.num_layers):
+            x = self.convs[i](x, edge_index)
+            x = self.bns[i](x)
+            x = F.relu(x, inplace=True)
+            x = F.dropout(x, p=0.5, training=self.training)
+
+            if i == 0:
+                x = x + 0.2 * x_input
+            else:
+                x = x + 0.2 * x_input + 0.5 * layer_out[i - 1]
+            layer_out.append(x)
+
+        weight = F.softmax(self.weights, dim=0)
+        for i in range(len(layer_out)):
+            layer_out[i] = layer_out[i] * weight[i]
+
+        x = sum(layer_out)
+        x = self.out_fc(x)
+        x = F.log_softmax(x, dim=1)
+
+        return x
+
+
 # 实例化模型
 model = GCNNet(dataset=dataset, hidden=16, num_layers=2)
 # model = GATNet(dataset=dataset, hidden=8, num_layers=2)
 # model = SAGENet(dataset=dataset, hidden=16, num_layers=2)
 # model = JKNet(dataset=dataset, mode='max', hidden=16, num_layers=6)
+# model = GCN_res(dataset=dataset, hidden=16, num_layers=8)
 print(model)
 
 # 转换为cpu或cuda格式
